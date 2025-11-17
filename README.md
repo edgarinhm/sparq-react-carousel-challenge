@@ -1,4 +1,4 @@
-# React Carousel Challenge
+# SPARQ React Carousel Challenge
 
 This project implements a simple and customizable carousel component in React.
 
