@@ -10,7 +10,7 @@ const Carousel = ({ delay, children }) => {
     }
 
     const onButtonPrevious = () => {
-        startCycle(cyclePreviousLoop, delay);
+        startCycle(cycleNextLoop, delay);
     }
 
     const startCycle = React.useCallback((callback, delay) => {
