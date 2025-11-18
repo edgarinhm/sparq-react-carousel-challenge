@@ -1,47 +1,56 @@
 import React from 'react';
 import './Carousel.css';
 
-const Carousel = ({ delay, children }) => {
+const Carousel = ({ delay = 10000, children }) => {
     const itemLength = Array.isArray(children) ? children.length - 1 : 0;
     const [currentIndex, setCurrentIndex] = React.useState(0);
     const intervalRef = React.useRef(null);
 
-    const onButtonNext = () => {
-        setCurrentIndex((index) => index === itemLength ? 0 : index + 1);
-        startCycle(cycleNextLoop, delay);
-    }
-
-    const onButtonPrevious = () => {
-        setCurrentIndex((index) => index === 0 ? itemLength : index - 1);
-        startCycle(cyclePreviousLoop, delay);
-    }
-
-    const startCycle = React.useCallback((callback, delay) => {
-        stopCycle();
-        intervalRef.current = setInterval(callback, delay);
-    }, []);
-
     const stopCycle = React.useCallback(() => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        intervalRef.current = null;
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
     }, []);
 
-    const cycleNextLoop = React.useCallback(() => {
-        setCurrentIndex((index) => index === itemLength ? 0 : index + 1);
+    const goToNext = React.useCallback(() => {
+        setCurrentIndex((index) => (index >= itemLength ? 0 : index + 1));
     }, [itemLength]);
 
-    const cyclePreviousLoop = React.useCallback(() => {
-        setCurrentIndex((index) => index === 0 ? itemLength : index - 1);
+    const goToPrevious = React.useCallback(() => {
+        setCurrentIndex((index) => (index <= 0 ? itemLength : index - 1));
     }, [itemLength]);
+
+    const goToSlide = React.useCallback((index) => {
+        setCurrentIndex(index);
+    }, []);
+
+    const startCycle = React.useCallback(() => {
+        stopCycle();
+        if (itemLength > 2) {
+            intervalRef.current = setInterval(goToNext, delay);
+        }
+    }, [stopCycle, itemLength, goToNext, delay]);
+
+    const handleNext = () => {
+        goToNext();
+        startCycle();
+    };
+
+    const handlePrevious = () => {
+        goToPrevious();
+        startCycle();
+    };
+
+    const handleIndicatorClick = (index) => {
+        goToSlide(index);
+        startCycle();
+    };
 
     React.useEffect(() => {
-        if (itemLength > 1) {
-            startCycle(cycleNextLoop, delay);
-        }
-        return () => {
-            stopCycle();
-        }
-    }, [delay, itemLength, startCycle, stopCycle, cycleNextLoop]);
+        startCycle();
+        return stopCycle;
+    }, [itemLength, startCycle, stopCycle]);
 
     return (
         <div className='carousel'>
@@ -51,7 +60,11 @@ const Carousel = ({ delay, children }) => {
                         {children[currentIndex]}
                     </div>
                     <div className='carousel-buttons'>
-                        <button className='carousel-button carousel-button-previous' onClick={onButtonPrevious}>
+                        <button
+                            className='carousel-button carousel-button-previous'
+                            onClick={handlePrevious}
+                            aria-label="Previous slide"
+                        >
                             &#8249;
                         </button>
                         <div className='carousel-indicators'>
@@ -59,14 +72,18 @@ const Carousel = ({ delay, children }) => {
                                 <span
                                     key={index}
                                     className={`carousel-indicator ${index === currentIndex ? 'active' : ''}`}
-                                    onClick={() => {
-                                        setCurrentIndex(index);
-                                        startCycle(cycleNextLoop, delay);
-                                    }}
+                                    onClick={() => handleIndicatorClick(index)}
+                                    role="button"
+                                    aria-label={`Go to slide ${index + 1}`}
+                                    tabIndex={0}
                                 />
                             ))}
                         </div>
-                        <button className='carousel-button carousel-button-next' onClick={onButtonNext}>
+                        <button
+                            className='carousel-button carousel-button-next'
+                            onClick={handleNext}
+                            aria-label="Next slide"
+                        >
                             &#8250;
                         </button>
                     </div>
